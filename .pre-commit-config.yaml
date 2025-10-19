@@ -1,0 +1,99 @@
+repos:
+  # Python linting and formatting with Ruff
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: "v0.12.7"
+    hooks:
+      - id: ruff-check
+        name: "🐍 Python · Lint code with (ruff)"
+        args: [--fix, --exit-non-zero-on-fix, --config=pyproject.toml, --output-format=concise]
+      - id: ruff-format
+        name: "🐍 Python · Format code with (ruff)"
+        args: [--config=pyproject.toml]
+      - id: ruff-check
+        name: "📓 Jupyter · Lint notebooks with (ruff)"
+        args: [--fix]
+        files: \.ipynb$
+
+  # Python docstring coverage
+  - repo: https://github.com/econchick/interrogate
+    rev: 1.7.0  # Updated to latest version
+    hooks:
+      - id: interrogate
+        name: "📚 Python · Check docstring coverage (interrogate)"
+        args: [--config=pyproject.toml] #, --quiet]
+        files: \.py$
+        types: [python]
+
+  # Python dependency analysis
+  - repo: https://github.com/fpgmaas/deptry
+    rev: "0.20.0"  # Fixed with actual version
+    hooks:
+      - id: deptry
+        name: "📦 Python · Analyze dependencies (deptry)"
+        args: ["--ignore", "DEP001,DEP003,DEP004"]
+
+  # Security scanning for hardcoded secrets
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.28.0
+    hooks:
+      - id: gitleaks
+        name: "🔒 Security · Scan for hardcoded secrets (gitleaks)"
+        args : ["--report-format=table", "--redact"]
+
+  # Standard pre-commit hooks for file validation
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: "v5.0.0"
+    hooks:
+      - id: check-case-conflict
+        name: "📁 Files · Check filename case conflicts (pre-commit)"
+      - id: check-merge-conflict
+        name: "🔀 Git · Check for merge conflict markers (pre-commit)"
+      - id: end-of-file-fixer
+        name: "📄 Files · Ensure files end with newline (pre-commit)"
+      - id: trailing-whitespace
+        name: "🔤 Files · Remove trailing whitespace (pre-commit)"
+        args: [--markdown-linebreak-ext=md]
+      - id: check-added-large-files
+        name: "📦 Files · Check for large files (>500KB) (pre-commit)"
+        args: [--maxkb=500]
+      - id: mixed-line-ending
+        name: "📄 Files · Fix mixed line endings (pre-commit)"
+        args: [--fix=auto]
+      - id: check-json
+        name: "📋 JSON · Validate syntax (pre-commit)"
+        exclude: \.ipynb$
+      - id: pretty-format-json
+        name: "📋 JSON · Format and prettify (pre-commit)"
+        exclude: \.ipynb$
+        args: [--autofix, --no-sort-keys, --indent=2]
+      - id: check-toml
+        name: "⚙️  TOML · Validate syntax (pre-commit)"
+      - id: check-yaml
+        name: "📄 YAML · Validate syntax (pre-commit)"
+      - id: check-xml
+        name: "🏷️  XML · Validate syntax (pre-commit)"
+      - id: check-executables-have-shebangs
+        name: "🔧 Scripts · Check executable files have shebangs (pre-commit)"
+      - id: check-shebang-scripts-are-executable
+        name: "🔧 Scripts · Check shebang scripts are executable (pre-commit)"
+
+  # Local hooks for custom cleaning utilities (Windows compatible)
+  - repo: local
+    hooks:
+      - id: clean-cache-files
+        name: "🧹 Cleanup · Remove cache and temporary files (custom)"
+        entry: powershell
+        args:
+          - -Command
+          - |
+            Write-Host "Cleaning cache and temporary files..."
+            Get-ChildItem -Path . -Recurse -Directory -Name "__pycache__" -ErrorAction SilentlyContinue | Remove-Item -Recurse -Force
+            Get-ChildItem -Path . -Recurse -File -Name ".DS_Store" -ErrorAction SilentlyContinue | Remove-Item -Force
+            Get-ChildItem -Path . -Recurse -Directory -Name "catboost_info" -ErrorAction SilentlyContinue | Remove-Item -Recurse -Force
+            Get-ChildItem -Path . -Recurse -Directory -Name ".ruff_cache" -ErrorAction SilentlyContinue | Remove-Item -Recurse -Force
+            Get-ChildItem -Path . -Recurse -Directory -Name ".ipynb_checkpoints" -ErrorAction SilentlyContinue | Remove-Item -Recurse -Force
+            Get-ChildItem -Path . -Recurse -Directory -Name "*.egg-info" -ErrorAction SilentlyContinue | Remove-Item -Recurse -Force
+            Write-Host "Cache cleanup completed."
+        language: system
+        always_run: true
+        pass_filenames: false
